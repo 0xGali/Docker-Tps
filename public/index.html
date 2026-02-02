@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enquête de Satisfaction - Formation DevOps</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Enquête de Satisfaction</h1>
+            <p class="subtitle">Formation DevOps - Docker & CI/CD</p>
+        </header>
+
+        <main>
+            <!-- Survey Form -->
+            <section class="survey-section">
+                <h2>Votre Avis Compte !</h2>
+                <form id="surveyForm">
+                    <div class="form-group">
+                        <label for="name">Nom / Prénom *</label>
+                        <input type="text" id="name" name="name" required placeholder="Entrez votre nom">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rating">Note Globale * (1 = Très insatisfait, 5 = Très satisfait)</label>
+                        <div class="rating-container">
+                            <input type="radio" id="rating1" name="rating" value="1" required>
+                            <label for="rating1" class="rating-label">1 ⭐</label>
+
+                            <input type="radio" id="rating2" name="rating" value="2">
+                            <label for="rating2" class="rating-label">2 ⭐⭐</label>
+
+                            <input type="radio" id="rating3" name="rating" value="3">
+                            <label for="rating3" class="rating-label">3 ⭐⭐⭐</label>
+
+                            <input type="radio" id="rating4" name="rating" value="4">
+                            <label for="rating4" class="rating-label">4 ⭐⭐⭐⭐</label>
+
+                            <input type="radio" id="rating5" name="rating" value="5">
+                            <label for="rating5" class="rating-label">5 ⭐⭐⭐⭐⭐</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment">Commentaires (optionnel)</label>
+                        <textarea id="comment" name="comment" rows="4" placeholder="Partagez vos impressions sur la formation..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Envoyer mon avis</button>
+                </form>
+
+                <div id="message" class="message"></div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="stats-section">
+                <h2>📊 Statistiques</h2>
+                <div id="stats" class="stats-content">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalResponses">0</div>
+                        <div class="stat-label">Réponses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="averageRating">-</div>
+                        <div class="stat-label">Note Moyenne</div>
+                    </div>
+                </div>
+
+                <div id="distribution" class="distribution"></div>
+            </section>
+
+            <!-- Responses List -->
+            <section class="responses-section">
+                <h2>💬 Derniers Avis</h2>
+                <div id="responsesList" class="responses-list">
+                    <p class="no-data">Aucune réponse pour le moment</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>🐳 DevOps Workshop - TP Docker & CI/CD</p>
+        </footer>
+    </div>
+
+    <script>
+        // Load statistics on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadResponses();
+        });
+
+        // Handle form submission
+        document.getElementById('surveyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById('name').value,
+                rating: document.querySelector('input[name="rating"]:checked').value,
+                comment: document.getElementById('comment').value
+            };
+
+            try {
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('✅ Merci pour votre retour !', 'success');
+                    document.getElementById('surveyForm').reset();
+                    loadStats();
+                    loadResponses();
+                } else {
+                    showMessage('❌ Erreur: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erreur de connexion au serveur', 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Load and display statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                document.getElementById('totalResponses').textContent = data.total;
+                document.getElementById('averageRating').textContent = 
+                    data.total > 0 ? `${data.averageRating} / 5` : '-';
+
+                displayDistribution(data.distribution);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Display rating distribution
+        function displayDistribution(distribution) {
+            const container = document.getElementById('distribution');
+            if (!distribution) return;
+
+            const total = Object.values(distribution).reduce((sum, count) => sum + count, 0);
+
+            if (total === 0) {
+                container.innerHTML = '<p class="no-data">Pas encore de données</p>';
+                return;
+            }
+
+            let html = '<h3>Distribution des notes</h3><div class="bars">';
+            for (let i = 5; i >= 1; i--) {
+                const count = distribution[i] || 0;
+                const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
+                html += `
+                    <div class="bar-row">
+                        <span class="bar-label">${i} ⭐</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="bar-count">${count}</span>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Load and display responses
+        async function loadResponses() {
+            try {
+                const response = await fetch('/api/responses');
+                const data = await response.json();
+
+                const container = document.getElementById('responsesList');
+
+                if (data.responses.length === 0) {
+                    container.innerHTML = '<p class="no-data">Aucune réponse pour le moment</p>';
+                    return;
+                }
+
+                const responsesHtml = data.responses
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                    .slice(0, 10)
+                    .map(r => `
+                        <div class="response-card">
+                            <div class="response-header">
+                                <strong>${escapeHtml(r.name)}</strong>
+                                <span class="response-rating">${'⭐'.repeat(r.rating)}</span>
+                            </div>
+                            ${r.comment ? `<p class="response-comment">${escapeHtml(r.comment)}</p>` : ''}
+                            <div class="response-time">${formatDate(r.timestamp)}</div>
+                        </div>
+                    `).join('');
+
+                container.innerHTML = responsesHtml;
+            } catch (error) {
+                console.error('Error loading responses:', error);
+            }
+        }
+
+        // Show message to user
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Format date
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

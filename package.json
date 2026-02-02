@@ -1,0 +1,22 @@
+{
+  "name": "course-satisfaction-survey",
+  "version": "2.0.0",
+  "description": "DevOps Workshop - Student Satisfaction Survey Application with Redis",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "express",
+    "survey",
+    "devops",
+    "redis"
+  ],
+  "author": "DevOps Course",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "redis": "^4.6.5"
+  }
+}
