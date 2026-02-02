@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"  
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis-db     
+    networks:
+      - app-network
+
+  redis-db:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+volumes:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge
