@@ -1,0 +1,41 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Check out the code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Log in to Docker Hub (Using Secrets for security)
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 3. Build the Docker Image and Push it to the Registry
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          # Replace 'your-username' with your actual Docker Hub username
+          tags: ${{ secrets.DOCKER_USERNAME }}/course-survey-app:latest
+
+  # OPTIONAL: The Deployment Step
+  # This runs only if the build step above succeeds
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Deployment
+        run: echo "Image successfully pushed to Docker Hub! ready for deployment."
+        # If using Render, you would uncomment the line below:
+        # run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
