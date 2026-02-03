@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+# Service 1 : Notre Application Node . js
+  app:
+    build: . # Construire depuis le dossier courant
+    ports:
+      - "8080:8080"     # Mappage du Port 8080
+    environment:
+      - REDIS_HOST=redis-db # Dire l ’ app o trouver Redis
+    depends_on:
+      - redis-db # Attendre que la DB d m a r r e
+# Service 2 : La Base de D o n n e s
+  redis-db:
+    image: redis:alpine
+    networks :
+      - default # Partage automatique du r s e a u
+    volumes :
+      - redis-data:/data # Persistance des donnees
+      
+volumes :
+  redis-data : # D f i n i t i o n du volume
