@@ -31,5 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Deployment
-        run: echo "Image successfully pushed to Docker Hub! ready for deployment."
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          echo "Image successfully pushed to Docker Hub! ready for deployment."
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
