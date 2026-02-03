@@ -29,4 +29,4 @@ jobs:
     steps:
       - name: Trigger Render Deployment
 # Envoyer un signal à Render pour mettre à jour le site
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        #run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
